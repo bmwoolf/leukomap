@@ -240,3 +240,17 @@ class TestDataLoadingIntegration:
 
 if __name__ == "__main__":
     pytest.main([__file__]) 
+
+
+def test_data_loader_produces_valid_anndata():
+    from leukomap.data_loading import load_data
+    import anndata as ad
+    import os
+    data_dir = os.path.join(os.path.dirname(__file__), '../data')
+    adata = load_data(data_dir)
+    assert isinstance(adata, ad.AnnData)
+    assert adata.n_obs > 0
+    assert adata.n_vars > 0
+    assert adata.X.shape == (adata.n_obs, adata.n_vars)
+    assert not adata.obs.empty
+    assert not adata.var.empty 
