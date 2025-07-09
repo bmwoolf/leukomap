@@ -1,7 +1,7 @@
 ## Planned Pipeline Tasks
 
 ### Data Ingestion & Embedding
-- [ ] Load Caron et al. scRNA-seq data into `AnnData` format
+- [x] Load Caron et al. scRNA-seq data into `AnnData` format
 - [ ] Train a latent model using **scVI** or **scANVI** for clustering
 - [ ] Visualize embeddings with UMAP
 - [ ] Integrate a **healthy bone marrow reference** (e.g. Human Cell Atlas) to detect abnormal clusters
