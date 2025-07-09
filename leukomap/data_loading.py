@@ -38,25 +38,6 @@ def load_data(data_dir: Union[str, Path]) -> ad.AnnData:
     - PRE-T (Pre-T acute lymphoblastic leukemia)
     - PBMMC (Healthy pediatric bone marrow mononuclear cells)
     
-    Parameters
-    ----------
-    data_dir : str or Path
-        Path to directory containing scRNA-seq data files.
-        Expected structure:
-        data_dir/
-        ├── raw/                    # Raw 10X data
-        │   ├── ETV6-RUNX1_1/
-        │   ├── ETV6-RUNX1_2/
-        │   ├── HHD_1/
-        │   ├── HHD_2/
-        │   ├── PRE-T_1/
-        │   ├── PRE-T_2/
-        │   ├── PBMMC_1/
-        │   ├── PBMMC_2/
-        │   └── PBMMC_3/
-        └── annotations/
-            └── GSE132509_cell_annotations.tsv
-    
     Returns
     -------
     ad.AnnData
@@ -66,13 +47,6 @@ def load_data(data_dir: Union[str, Path]) -> ad.AnnData:
         - .var: gene metadata
         - .obsm: embeddings (tSNE, UMAP if available)
         - .uns: unstructured metadata
-    
-    Raises
-    ------
-    FileNotFoundError
-        If data directory or required files don't exist
-    ValueError
-        If data format is invalid or corrupted
     """
     
     data_dir = Path(data_dir)
@@ -152,22 +126,35 @@ def _load_10x_data(data_dir: Path) -> ad.AnnData:
         if not sample_dir.exists():
             logger.warning(f"Sample directory not found: {sample_dir}")
             continue
-            
-        if not (sample_dir / "matrix.mtx").exists():
-            logger.warning(f"matrix.mtx not found in: {sample_dir}")
+        
+        # Accept both compressed and uncompressed files
+        def find_file(basename):
+            for ext in ["", ".gz"]:
+                f = sample_dir / f"{basename}{ext}"
+                if f.exists():
+                    return f
+            return None
+        
+        matrix_file = find_file("matrix.mtx")
+        barcodes_file = find_file("barcodes.tsv")
+        genes_file = find_file("genes.tsv")
+        
+        if not (matrix_file and barcodes_file and genes_file):
+            logger.warning(f"Missing files in: {sample_dir}")
             continue
         
         try:
             # Load individual sample
-            sample_adata = sc.read_10x_mtx(sample_dir, var_names='gene_symbols', cache=True)
-            
+            sample_adata = sc.read_10x_mtx(
+                sample_dir,
+                var_names='gene_symbols',  # Use gene symbol (second column)
+                cache=True
+            )
             # Add sample information
             sample_adata.obs['sample'] = sample_name
             sample_adata.obs['sample_type'] = _extract_sample_type(sample_name)
-            
             adata_list.append(sample_adata)
             logger.info(f"Loaded sample: {sample_name} ({sample_adata.n_obs} cells)")
-            
         except Exception as e:
             logger.error(f"Failed to load sample {sample_name}: {e}")
             continue
@@ -219,37 +206,39 @@ def _extract_sample_type(sample_name: str) -> str:
 
 
 def _load_cell_annotations(adata: ad.AnnData, data_dir: Path) -> ad.AnnData:
-    """Load cell annotations from TSV file if available."""
-    
+    """Load cell annotations from TSV file if available, harmonizing cell IDs."""
+    import re
     # Look for annotation files
     annotation_files = [
         "GSE132509_cell_annotations.tsv",
         "cell_annotations.tsv",
         "annotations.tsv"
     ]
-    
     for ann_file in annotation_files:
         ann_path = data_dir / "annotations" / ann_file
         if ann_path.exists():
             try:
                 annotations = pd.read_csv(ann_path, sep='\t', index_col=0)
-                
+                # Harmonize annotation cell IDs to match AnnData barcodes
+                def harmonize(cell_id):
+                    # Remove sample prefix (up to last underscore), add -1
+                    return cell_id.split('_')[-1] + '-1'
+                annotations['barcode'] = annotations.index.map(harmonize)
+                # Drop duplicate barcodes, keeping the first occurrence
+                annotations = annotations[~annotations['barcode'].duplicated(keep='first')]
+                annotations = annotations.set_index('barcode')
                 # Match annotations to cells
                 common_cells = adata.obs.index.intersection(annotations.index)
-                
                 if len(common_cells) > 0:
                     # Add annotations to adata.obs
                     for col in annotations.columns:
                         if col not in adata.obs.columns:
                             adata.obs.loc[common_cells, col] = annotations.loc[common_cells, col]
-                    
                     logger.info(f"Loaded annotations for {len(common_cells)} cells")
                 else:
-                    logger.warning("No matching cell IDs found in annotations")
-                    
+                    logger.warning("No matching cell IDs found in annotations after harmonization")
             except Exception as e:
                 logger.error(f"Failed to load annotations from {ann_path}: {e}")
-    
     return adata
 
 
