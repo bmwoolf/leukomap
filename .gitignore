@@ -5,3 +5,6 @@ __pycache__/
 .vscode/
 cache/
 data/
+*.h5ad
+*.mtx
+*.tar
