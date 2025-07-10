@@ -20,7 +20,8 @@ plotly>=5.15.0
 
 # Data processing
 h5py>=3.8.0
-zarr>=2.15.0
+zarr<3.0.0
+scikit-misc>=0.1.4
 
 # Testing
 pytest>=7.4.0
