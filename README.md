@@ -30,6 +30,28 @@ This project aims to extend the original analysis with deeper embeddings, clinic
 14. `export_outputs(AnnData, DEG_table, pathways, druggable_targets) -> annotated_clusters + druggable_targets files (CSV, JSON, PDF)`  
 15. `package_pipeline(configs) -> Nextflow_workflow`   
 
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/bmwoolf/protrankrl.git
+cd ProtRankRL
+```
+
+2. Create a virtual environment:
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+## AnnData Object
+Please see `./adata/adata_example.js` and `./adata/adata_example.py` for example outlines of how you would represent real world cell and gene annotations in memory. Pretty cool.
+
 ---
 ## Running the code
 
