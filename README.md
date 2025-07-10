@@ -31,6 +31,26 @@ This project aims to extend the original analysis with deeper embeddings, clinic
 15. `package_pipeline(configs) -> Nextflow_workflow`   
 
 ---
+## Running the code
+
+1. Clone the repository:
+```bash
+git clone https://github.com/bmwoolf/leukomap.git
+cd ProtRankRL
+```
+
+2. Create a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
+3. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+---
 
 ## Data Sources
 - [GEO: GSE132509](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE132509) — Caron et al. (2020)
