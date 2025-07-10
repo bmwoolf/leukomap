@@ -11,7 +11,7 @@ This project aims to extend the original analysis with deeper embeddings, clinic
 - Build a reusable, modular scRNA-seq pipeline for future leukemia engineers
 
 ## Root function
-analyze(scRNA_seq_data, healthy_reference) -> annotated_clusters + druggable_targets
+`analyze(scRNA_seq_data, healthy_reference) -> annotated_clusters + druggable_targets`
 
 ## Sub-functions
 1. `load_data(data_dir) -> AnnData`  
