@@ -287,6 +287,40 @@ def add_latent_to_adata(
     return adata
 
 
+def embed(
+    model: Any,
+    adata: ad.AnnData,
+    give_mean: bool = True,
+    batch_size: int = 128,
+    key: str = "X_scvi"
+) -> np.ndarray:
+    """
+    Extract latent space embeddings from trained scVI/scANVI model.
+    
+    This function implements the embed() specification from the README:
+    embed(scVI_model, AnnData) -> latent_space
+    
+    Args:
+        model: Trained scVI or scANVI model
+        adata: AnnData object
+        give_mean: Whether to return mean of latent distribution
+        batch_size: Batch size for inference
+        key: Key to store latent representation in adata.obsm (if adding to adata)
+    
+    Returns:
+        Latent space representation as numpy array
+    """
+    logger.info("Extracting latent space embeddings...")
+    
+    latent = get_latent_representation(model, adata, give_mean, batch_size)
+    
+    # Also add to adata.obsm for convenience
+    adata.obsm[key] = latent
+    
+    logger.info(f"Extracted latent space: {latent.shape}")
+    return latent
+
+
 def train_models(
     adata: ad.AnnData,
     do_train_scvi: bool = True,

@@ -81,10 +81,10 @@ def _is_10x_format(data_dir: Path) -> bool:
     if not raw_dir.exists():
         return False
     
-    # Check for at least one sample directory with matrix.mtx
+    # Check for at least one sample directory with matrix.mtx (compressed or uncompressed)
     sample_dirs = [d for d in raw_dir.iterdir() if d.is_dir()]
     for sample_dir in sample_dirs:
-        if (sample_dir / "matrix.mtx").exists():
+        if (sample_dir / "matrix.mtx").exists() or (sample_dir / "matrix.mtx.gz").exists():
             return True
     
     return False
@@ -144,7 +144,7 @@ def _load_10x_data(data_dir: Path) -> ad.AnnData:
             continue
         
         try:
-            # Load individual sample
+            # Load individual sample - handle both old (genes.tsv) and new (features.tsv) formats
             sample_adata = sc.read_10x_mtx(
                 sample_dir,
                 var_names='gene_symbols',  # Use gene symbol (second column)
