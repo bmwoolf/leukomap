@@ -1,0 +1,48 @@
+LeukoMap Dataset Summary
+==================================================
+
+Total cells: 39,211
+Total genes: 23,198
+Latent dimensions: 10
+
+Sample Type Distribution:
+------------------------------
+ETV6-RUNX1: 17,936 cells (45.7%)
+HHD: 8,634 cells (22.0%)
+PBMMC: 6,939 cells (17.7%)
+PRE-T: 5,702 cells (14.5%)
+
+Cell Type Distribution:
+------------------------------
+ETV6.RUNX1.2: 6,034 cells (15.4%)
+HHD.2: 4,712 cells (12.0%)
+Erythrocytes: 4,604 cells (11.7%)
+T cells + NK: 3,985 cells (10.2%)
+HHD.1: 3,095 cells (7.9%)
+ETV6.RUNX1.4: 3,087 cells (7.9%)
+B cells + Mono: 2,849 cells (7.3%)
+PRE-T.1: 2,751 cells (7.0%)
+ETV6.RUNX1.1: 2,688 cells (6.9%)
+PRE-T.2: 1,882 cells (4.8%)
+ETV6.RUNX1.3: 1,570 cells (4.0%)
+
+Quality Metrics Summary:
+------------------------------
+
+nUMI:
+  Mean: 5367.74
+  Std: 3912.48
+  Min: 1116.00
+  Max: 48176.00
+
+nGene:
+  Mean: 1644.27
+  Std: 780.83
+  Min: 206.00
+  Max: 5953.00
+
+percent.mito:
+  Mean: 0.00
+  Std: 0.00
+  Min: 0.00
+  Max: 0.06

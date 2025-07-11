@@ -1,0 +1,135 @@
+Differential Expression Analysis Summary
+==================================================
+
+
+B cells + Mono:
+------------------------------
+Total genes analyzed: 23,198
+Significant genes (p<0.05, FC>0.5): 1,217
+Top 5 marker genes:
+  IGKC: FC=3.26, p=0.00e+00
+  S100A9: FC=4.71, p=0.00e+00
+  S100A8: FC=4.71, p=0.00e+00
+  LYZ: FC=5.42, p=0.00e+00
+  COTL1: FC=3.06, p=0.00e+00
+
+
+ETV6.RUNX1.1:
+------------------------------
+Total genes analyzed: 23,198
+Significant genes (p<0.05, FC>0.5): 2,404
+Top 5 marker genes:
+  HLA-DRB5: FC=3.66, p=0.00e+00
+  HLA-DPB1: FC=2.77, p=0.00e+00
+  RPS15A: FC=1.15, p=0.00e+00
+  HLA-DQA2: FC=5.08, p=0.00e+00
+  RPS24: FC=1.32, p=0.00e+00
+
+
+ETV6.RUNX1.2:
+------------------------------
+Total genes analyzed: 23,198
+Significant genes (p<0.05, FC>0.5): 1,275
+Top 5 marker genes:
+  HLA-DRA: FC=2.67, p=0.00e+00
+  CD24: FC=3.03, p=0.00e+00
+  CD52: FC=2.24, p=0.00e+00
+  TERF2: FC=3.17, p=0.00e+00
+  CD74: FC=2.47, p=0.00e+00
+
+
+ETV6.RUNX1.3:
+------------------------------
+Total genes analyzed: 23,198
+Significant genes (p<0.05, FC>0.5): 1,255
+Top 5 marker genes:
+  HLA-B: FC=2.17, p=0.00e+00
+  LAPTM5: FC=2.11, p=0.00e+00
+  CD74: FC=2.40, p=0.00e+00
+  HLA-DRB5: FC=3.20, p=0.00e+00
+  RCSD1: FC=2.23, p=0.00e+00
+
+
+ETV6.RUNX1.4:
+------------------------------
+Total genes analyzed: 23,198
+Significant genes (p<0.05, FC>0.5): 1,832
+Top 5 marker genes:
+  TCL1B: FC=5.86, p=0.00e+00
+  H3F3B: FC=1.53, p=0.00e+00
+  DNTT: FC=1.93, p=0.00e+00
+  H1F0: FC=3.36, p=0.00e+00
+  HBA2: FC=3.40, p=0.00e+00
+
+
+Erythrocytes:
+------------------------------
+Total genes analyzed: 23,198
+Significant genes (p<0.05, FC>0.5): 624
+Top 5 marker genes:
+  HBB: FC=8.20, p=0.00e+00
+  HBA1: FC=8.13, p=0.00e+00
+  HBA2: FC=8.19, p=0.00e+00
+  HBD: FC=6.42, p=0.00e+00
+  AHSP: FC=6.05, p=0.00e+00
+
+
+HHD.1:
+------------------------------
+Total genes analyzed: 23,198
+Significant genes (p<0.05, FC>0.5): 2,053
+Top 5 marker genes:
+  RPL23A: FC=1.60, p=0.00e+00
+  VPREB1: FC=3.76, p=0.00e+00
+  MT-ND1: FC=1.95, p=0.00e+00
+  RPS4X: FC=1.49, p=0.00e+00
+  RPL19: FC=1.21, p=0.00e+00
+
+
+HHD.2:
+------------------------------
+Total genes analyzed: 23,198
+Significant genes (p<0.05, FC>0.5): 4,320
+Top 5 marker genes:
+  TCF4: FC=3.30, p=0.00e+00
+  RPL39: FC=1.33, p=0.00e+00
+  RPS4X: FC=1.45, p=0.00e+00
+  SOX4: FC=2.88, p=0.00e+00
+  STIM2: FC=3.93, p=0.00e+00
+
+
+PRE-T.1:
+------------------------------
+Total genes analyzed: 23,198
+Significant genes (p<0.05, FC>0.5): 4,437
+Top 5 marker genes:
+  CHI3L2: FC=7.23, p=0.00e+00
+  TRBC1: FC=5.57, p=0.00e+00
+  FXYD2: FC=6.60, p=0.00e+00
+  CD1E: FC=6.81, p=0.00e+00
+  ITM2A: FC=4.92, p=0.00e+00
+
+
+PRE-T.2:
+------------------------------
+Total genes analyzed: 23,198
+Significant genes (p<0.05, FC>0.5): 2,363
+Top 5 marker genes:
+  EPHB6: FC=7.03, p=0.00e+00
+  TRBC2: FC=5.41, p=0.00e+00
+  RCBTB2: FC=4.89, p=0.00e+00
+  CD3D: FC=4.58, p=0.00e+00
+  MAL: FC=4.89, p=0.00e+00
+
+
+T cells + NK:
+------------------------------
+Total genes analyzed: 23,198
+Significant genes (p<0.05, FC>0.5): 682
+Top 5 marker genes:
+  RPS27: FC=1.40, p=0.00e+00
+  RPL21: FC=1.43, p=0.00e+00
+  B2M: FC=1.38, p=0.00e+00
+  RPS29: FC=1.28, p=0.00e+00
+  RPS14: FC=1.20, p=0.00e+00
+

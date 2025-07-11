@@ -2,8 +2,8 @@
 
 ### Data Ingestion & Embedding
 - [x] Load Caron et al. scRNA-seq data into `AnnData` format
-- [ ] Train a latent model using **scVI** or **scANVI** for clustering
-- [ ] Visualize embeddings with UMAP
+- [x] Train a latent model using **scVI** or **scANVI** for clustering
+- [x] Visualize embeddings with UMAP
 - [ ] Integrate a **healthy bone marrow reference** (e.g. Human Cell Atlas) to detect abnormal clusters
 
 ### Annotation & Exploration
