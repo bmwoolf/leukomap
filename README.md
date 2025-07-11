@@ -51,6 +51,28 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+---
+
+## Pretrained Model Weights
+
+Pretrained scVI model weights for LeukoMap are available on Hugging Face Hub:
+https://huggingface.co/bmwoolf/leukomap-scvi
+
+You can load the model directly in your code as follows:
+```python
+from scvi.model import SCVI
+import scanpy as sc
+
+# Load your AnnData object
+adata = sc.read_h5ad("your_data.h5ad")
+
+# Load the pretrained model from Hugging Face
+model = SCVI.load("bmwoolf/leukomap-scvi", adata)
+
+# Get latent representation
+latent = model.get_latent_representation()
+```
+
 ## AnnData Object
 Please see `./adata/adata_example.js` and `./adata/adata_example.py` for example outlines of how you would represent real world cell and gene annotations in memory. Pretty cool.
 
