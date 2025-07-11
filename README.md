@@ -4,8 +4,7 @@
 
 Enhanced scRNA-seq Pipeline for Pediatric Leukemia
 
-LeukoMap is a modern re-analysis of the Caron et al. (2020) pediatric leukemia single-cell RNA-seq dataset, from the [UConn scRNA class](https://github.com/CBC-UCONN/Single-Cell-Transcriptomics).  
-This project aims to extend the original analysis with deeper embeddings, clinical references, richer annotations, and functional drug mapping.
+LeukoMap is a modern re-analysis of the Caron et al. (2020) pediatric leukemia single-cell RNA-seq dataset, from the [UConn scRNA class](https://github.com/CBC-UCONN/Single-Cell-Transcriptomics). This project aims to extend the original analysis with deeper embeddings, clinical references, richer annotations, and functional drug mapping.
 
 ## Goals
 - Understand intra-individual transcriptional heterogeneity in pediatric ALL
