@@ -1,4 +1,6 @@
-# leukomap
+![Banner](assets/github_banner.png)
+
+# LeukoMap
 
 Enhanced scRNA-seq Pipeline for Pediatric Leukemia
 
