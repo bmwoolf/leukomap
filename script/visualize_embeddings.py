@@ -44,9 +44,8 @@ def create_visualizations(adata, output_dir="cache"):
     output_path = Path(output_dir)
     output_path.mkdir(exist_ok=True)
     
-    # Set up plotting style
-    sc.settings.set_figure_params(dpi=100, frameon=False)
-    sc.settings.verbosity = 1
+    # Set matplotlib style
+    plt.style.use('default')
     
     # 1. Sample type visualization
     logger.info("Creating sample type UMAP...")
@@ -82,17 +81,17 @@ def create_visualizations(adata, output_dir="cache"):
     logger.info("Creating quality metrics UMAP...")
     fig, axes = plt.subplots(2, 2, figsize=(15, 12))
     
-    # Total counts
-    sc.pl.umap(adata, color='total_counts', ax=axes[0,0], show=False, 
-               title='Total Counts', use_raw=False)
+    # Total UMI counts
+    sc.pl.umap(adata, color='nUMI', ax=axes[0,0], show=False, 
+               title='Total UMI Counts', use_raw=False)
     
     # Number of genes
-    sc.pl.umap(adata, color='n_genes_by_counts', ax=axes[0,1], show=False, 
+    sc.pl.umap(adata, color='nGene', ax=axes[0,1], show=False, 
                title='Number of Genes', use_raw=False)
     
     # Mitochondrial percentage
-    if 'pct_counts_mt' in adata.obs.columns:
-        sc.pl.umap(adata, color='pct_counts_mt', ax=axes[1,0], show=False, 
+    if 'percent.mito' in adata.obs.columns:
+        sc.pl.umap(adata, color='percent.mito', ax=axes[1,0], show=False, 
                    title='Mitochondrial %', use_raw=False)
     
     # Sample
@@ -119,12 +118,12 @@ def create_summary_stats(adata, output_dir="cache"):
     
     # Quality metrics summary
     quality_stats = {
-        'total_counts': adata.obs['total_counts'].describe(),
-        'n_genes_by_counts': adata.obs['n_genes_by_counts'].describe(),
+        'nUMI': adata.obs['nUMI'].describe(),
+        'nGene': adata.obs['nGene'].describe(),
     }
     
-    if 'pct_counts_mt' in adata.obs.columns:
-        quality_stats['pct_counts_mt'] = adata.obs['pct_counts_mt'].describe()
+    if 'percent.mito' in adata.obs.columns:
+        quality_stats['percent.mito'] = adata.obs['percent.mito'].describe()
     
     # Save summary
     with open(output_path / "dataset_summary.txt", 'w') as f:
