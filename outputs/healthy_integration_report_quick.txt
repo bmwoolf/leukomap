@@ -1,0 +1,89 @@
+================================================================================
+QUICK HEALTHY REFERENCE INTEGRATION ANALYSIS REPORT
+================================================================================
+
+DATASET SUMMARY:
+Total cells: 69,832
+Total genes: 2,000
+Number of clusters: 11
+
+HEALTH STATUS DISTRIBUTION:
+  leukemia: 57,629 cells (82.5%)
+  healthy: 12,203 cells (17.5%)
+
+SAMPLE TYPE DISTRIBUTION:
+  ETV6-RUNX1: 27,394 cells (39.2%)
+  HHD: 16,094 cells (23.0%)
+  PRE-T: 14,141 cells (20.3%)
+  healthy: 12,203 cells (17.5%)
+
+ABNORMAL CLUSTER ANALYSIS:
+Found 8 abnormal clusters:
+  Cluster 0:
+    Total cells: 9,088
+    Leukemia cells: 9,088
+    Leukemia percentage: 100.0%
+    Dominant sample type: HHD
+    Abnormality score: 1.000
+
+  Cluster 1:
+    Total cells: 7,739
+    Leukemia cells: 7,739
+    Leukemia percentage: 100.0%
+    Dominant sample type: ETV6-RUNX1
+    Abnormality score: 1.000
+
+  Cluster 3:
+    Total cells: 7,030
+    Leukemia cells: 7,030
+    Leukemia percentage: 100.0%
+    Dominant sample type: ETV6-RUNX1
+    Abnormality score: 1.000
+
+  Cluster 4:
+    Total cells: 7,021
+    Leukemia cells: 7,021
+    Leukemia percentage: 100.0%
+    Dominant sample type: HHD
+    Abnormality score: 1.000
+
+  Cluster 7:
+    Total cells: 6,178
+    Leukemia cells: 6,178
+    Leukemia percentage: 100.0%
+    Dominant sample type: ETV6-RUNX1
+    Abnormality score: 1.000
+
+  Cluster 5:
+    Total cells: 6,589
+    Leukemia cells: 6,588
+    Leukemia percentage: 100.0%
+    Dominant sample type: PRE-T
+    Abnormality score: 1.000
+
+  Cluster 6:
+    Total cells: 6,473
+    Leukemia cells: 6,470
+    Leukemia percentage: 100.0%
+    Dominant sample type: ETV6-RUNX1
+    Abnormality score: 1.000
+
+  Cluster 2:
+    Total cells: 7,521
+    Leukemia cells: 7,515
+    Leukemia percentage: 99.9%
+    Dominant sample type: PRE-T
+    Abnormality score: 0.999
+
+
+DIFFERENTIAL EXPRESSION SUMMARY:
+
+QUALITY METRICS:
+  Mean genes per cell: 233.7
+  Median genes per cell: 153.0
+  Mean UMIs per cell: 520.4
+  Median UMIs per cell: 453.8
+
+================================================================================
+Quick analysis completed successfully!
+================================================================================
