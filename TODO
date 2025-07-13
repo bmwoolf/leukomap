@@ -7,11 +7,12 @@
 - [ ] Run Azimuth (Seurat), CellTypist, SingleR (R) for auto cell type labeling
 - [ ] Compare auto vs manual annotations (e.g. ARI/NMI)
 - [ ] Load into Cellxgene and Cirro for interactive visualization
-- [ ] Run pseudotime analysis with Monocle3 or scVelo to trace leukemia progression
+- [ ] Run pseudotime analysis with Monocle3 and scVelo to trace leukemia progression
 - [x] Perform differential expression between clusters
-- [ ] Run single-cell GSEA using `GSVA`, `fgsea`, or `ssGSEA`
+- [ ] Run single-cell GSEA using `GSVA`, `fgsea`, and `ssGSEA`
 - [ ] Link DEGs to perturbation signatures via LINCS1000 / Enrichr
 - [ ] Highlight top candidate pathways and drugs per cluster
+- [ ] turn scripts into actual classes, something that can be integrated into someone else's pipeline
 - [ ] Wrap analysis in Nextflow with Docker/Conda for portability
 - [ ] Use `nf-core` template
 - [ ] Export results as CSV and JSON, ready for ML and ontology integration
