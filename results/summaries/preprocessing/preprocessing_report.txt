@@ -1,0 +1,22 @@
+================================================================================
+PREPROCESSING REPORT
+================================================================================
+
+ORIGINAL DATA:
+  Cells: 39,355
+  Genes: 23,198
+
+PREPROCESSED DATA:
+  Cells: 39,355
+  Genes: 2,000
+
+FILTERING SUMMARY:
+  Cells removed: 0 (0.0%)
+  Genes removed: 21,198 (91.4%)
+
+PREPROCESSING STEPS:
+  1. Quality control (cell and gene filtering)
+  2. Library size normalization
+  3. Log transformation
+  4. Highly variable gene selection
+  5. Scaling to unit variance

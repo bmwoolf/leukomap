@@ -1,0 +1,45 @@
+================================================================================
+DATA VALIDATION REPORT
+================================================================================
+
+BASIC STATISTICS:
+  n_cells: 39375
+  n_genes: 25864
+  total_counts: 209934912.0
+  sparsity: 0.9372770221770531
+
+QUALITY METRICS:
+  total_counts:
+    mean: 5331.68017578125
+    median: 4069.0
+    min: 815.0
+    max: 64990.0
+  n_genes_by_counts:
+    mean: 1622.2670984126985
+    median: 1466.0
+    min: 69.0
+    max: 6820.0
+
+SAMPLE DISTRIBUTION:
+  sample_counts:
+    ETV6-RUNX1_2: 6274
+    ETV6-RUNX1_4: 5069
+    HHD_2: 5013
+    ETV6-RUNX1_3: 3862
+    HHD_1: 3728
+    PBMMC_2: 3105
+    PRE-T_1: 2959
+    ETV6-RUNX1_1: 2776
+    PRE-T_2: 2748
+    PBMMC_3: 2229
+    PBMMC_1: 1612
+  sample_type_counts:
+    ETV6-RUNX1: 17981
+    HHD: 8741
+    PBMMC: 6946
+    PRE-T: 5707
+  health_status_counts:
+    leukemia: 32429
+    healthy: 6946
+
+No issues identified

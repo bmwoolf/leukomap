@@ -1,0 +1,22 @@
+================================================================================
+CELL TYPE ANNOTATION SUMMARY (SIMPLE)
+================================================================================
+
+Total cells analyzed: 69,832
+
+MOCK ANNOTATION:
+  Unique cell types: 5
+  Top 5 cell types:
+    Leukemic blasts: 26,257 cells (37.6%)
+    Leukemic B cells: 16,827 cells (24.1%)
+    Leukemic T cells: 14,545 cells (20.8%)
+    Monocytes: 12,197 cells (17.5%)
+    T cells: 6 cells (0.0%)
+
+CELL TYPES BY HEALTH STATUS:
+  MOCK:
+    Leukemic B cells: 0 healthy, 16827 leukemia
+    Leukemic T cells: 0 healthy, 14545 leukemia
+    Leukemic blasts: 0 healthy, 26257 leukemia
+    Monocytes: 12197 healthy, 0 leukemia
+    T cells: 6 healthy, 0 leukemia
