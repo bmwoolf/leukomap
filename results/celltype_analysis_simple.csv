@@ -1,6 +1,0 @@
-mock_cell_type,healthy,leukemia,total_cells,healthy_pct,leukemia_pct
-Leukemic blasts,0,26257,26257,0.0,100.0
-Leukemic B cells,0,16827,16827,0.0,100.0
-Leukemic T cells,0,14545,14545,0.0,100.0
-Monocytes,12197,0,12197,100.0,0.0
-T cells,6,0,6,100.0,0.0
