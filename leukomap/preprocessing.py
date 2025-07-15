@@ -65,18 +65,26 @@ class PreprocessingPipeline(DataProcessor):
         data = self._filter_cells(data)
         data = self._filter_genes(data)
         
-        # Step 2: Normalization
+        # Step 2: Normalization (for scVI - keep non-negative)
         self.logger.info("Step 2: Normalization")
         sc.pp.normalize_total(data, target_sum=self.config.target_sum)
         sc.pp.log1p(data)
+        
+        # Store the log-normalized data for scVI (non-negative) BEFORE feature selection
+        data.layers['scvi_input'] = data.X.copy()
         
         # Step 3: Feature selection
         self.logger.info("Step 3: Feature selection")
         sc.pp.highly_variable_genes(data, n_top_genes=2000)
         self.selected_features = data.var_names[data.var['highly_variable']].tolist()
+        
+        # Store the log-normalized data for scVI (non-negative) BEFORE feature selection
+        data.raw = data.copy()
+        
+        # Now subset to highly variable genes
         data = data[:, data.var['highly_variable']]
         
-        # Step 4: Scaling
+        # Step 4: Scaling (for PCA/UMAP - can have negative values)
         self.logger.info("Step 4: Scaling")
         sc.pp.scale(data, max_value=10)
         
@@ -88,6 +96,8 @@ class PreprocessingPipeline(DataProcessor):
         }
         
         self.logger.info(f"Preprocessing complete: {data.n_obs} cells, {data.n_vars} genes")
+        self.logger.info("Note: Raw (log-normalized) data stored in adata.raw for scVI")
+        self.logger.info("Note: Scaled data in adata.X for PCA/UMAP")
         return data
     
     def _filter_cells(self, adata: ad.AnnData) -> ad.AnnData:

@@ -44,7 +44,13 @@ class SCVITrainer(DataProcessor):
             raise ValueError("Invalid input data")
         
         self.logger.info("Setting up scVI data")
-        adata = setup_scvi_data(data, batch_key=self.config.batch_key)
+        # Use raw data (log-normalized, non-negative) for scVI instead of scaled data
+        if hasattr(data, 'layers') and 'scvi_input' in data.layers:
+            self.logger.info("Using adata.layers['scvi_input'] for scVI (log-normalized, non-negative data)")
+            adata = setup_scvi_data(data, batch_key=self.config.batch_key, layer='scvi_input')
+        else:
+            self.logger.warning("No adata.layers['scvi_input'] found, using adata.X (may contain negative values)")
+            adata = setup_scvi_data(data, batch_key=self.config.batch_key)
         
         self.logger.info("Training scVI model")
         self.model = train_scvi_model(
@@ -163,7 +169,7 @@ def train_scvi_model(
     model.train(
         batch_size=batch_size,
         max_epochs=max_epochs,
-        learning_rate=learning_rate
+        plan_kwargs={"lr": learning_rate}
     )
     
     logger.info("scVI model training completed")
@@ -216,7 +222,7 @@ def train_scanvi_model(
     model.train(
         batch_size=batch_size,
         max_epochs=max_epochs,
-        learning_rate=learning_rate
+        plan_kwargs={"lr": learning_rate}
     )
     
     logger.info("scANVI model training completed")

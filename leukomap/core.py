@@ -223,6 +223,50 @@ class LeukoMapAnalysis:
         preprocessor = PreprocessingPipeline(self.config)
         adata = preprocessor.process(adata)
         self.tracker.store('preprocessed_data', adata)
+
+        # === Diagnostics: Check AnnData for NaNs, Infs, negatives, all-zero cells/genes ===
+        import numpy as np
+        
+        # Check scaled data (adata.X) - can have negatives for PCA/UMAP
+        X_scaled = adata.X
+        if hasattr(X_scaled, 'toarray'):
+            X_scaled = X_scaled.toarray()
+        nan_count_scaled = np.isnan(X_scaled).sum()
+        inf_count_scaled = np.isinf(X_scaled).sum()
+        neg_count_scaled = (X_scaled < 0).sum()
+        
+        self.logger.info(f"[Diagnostics] Scaled data (adata.X): shape={X_scaled.shape}")
+        self.logger.info(f"[Diagnostics] Scaled data - NaN: {nan_count_scaled}, Inf: {inf_count_scaled}, Neg: {neg_count_scaled}")
+        self.logger.info(f"[Diagnostics] Scaled data - min={np.nanmin(X_scaled):.3f}, max={np.nanmax(X_scaled):.3f}, mean={np.nanmean(X_scaled):.3f}")
+        
+        # Check raw data (adata.raw.X) - should be non-negative for scVI
+        if hasattr(adata, 'raw') and adata.raw is not None:
+            X_raw = adata.raw.X
+            if hasattr(X_raw, 'toarray'):
+                X_raw = X_raw.toarray()
+            nan_count_raw = np.isnan(X_raw).sum()
+            inf_count_raw = np.isinf(X_raw).sum()
+            neg_count_raw = (X_raw < 0).sum()
+            zero_cells_raw = (X_raw.sum(axis=1) == 0).sum()
+            zero_genes_raw = (X_raw.sum(axis=0) == 0).sum()
+            
+            self.logger.info(f"[Diagnostics] Raw data (adata.raw.X): shape={X_raw.shape}")
+            self.logger.info(f"[Diagnostics] Raw data - NaN: {nan_count_raw}, Inf: {inf_count_raw}, Neg: {neg_count_raw}")
+            self.logger.info(f"[Diagnostics] Raw data - Zero cells: {zero_cells_raw}, Zero genes: {zero_genes_raw}")
+            self.logger.info(f"[Diagnostics] Raw data - min={np.nanmin(X_raw):.3f}, max={np.nanmax(X_raw):.3f}, mean={np.nanmean(X_raw):.3f}")
+            
+            # Check for issues in raw data (used for scVI)
+            if nan_count_raw > 0 or inf_count_raw > 0 or neg_count_raw > 0 or zero_cells_raw > 0 or zero_genes_raw > 0:
+                raise ValueError(f"[Diagnostics] Raw data issue detected: NaN={nan_count_raw}, Inf={inf_count_raw}, Neg={neg_count_raw}, Zero cells={zero_cells_raw}, Zero genes={zero_genes_raw}. Aborting before scVI training.")
+            else:
+                self.logger.info("[Diagnostics] Raw data is clean - ready for scVI training")
+        else:
+            self.logger.warning("[Diagnostics] No adata.raw found - will use adata.X for scVI")
+            # Check scaled data for scVI if no raw data
+            if nan_count_scaled > 0 or inf_count_scaled > 0:
+                raise ValueError(f"[Diagnostics] Scaled data issue detected: NaN={nan_count_scaled}, Inf={inf_count_scaled}. Aborting before scVI training.")
+        
+        # === End diagnostics ===
         
         # Step 2: scVI Training
         self.logger.info("Step 2: scVI Training")
@@ -298,16 +342,16 @@ class LeukoMapAnalysis:
         
         # Run pseudotime analysis
         self.logger.info("Step 6a: Pseudotime analysis")
-        annotated_adata = self.run_pseudotime_analysis(annotated_adata)
+        adata = self.run_pseudotime_analysis(adata)
         
         # Run differential expression
         self.logger.info("Step 6b: Differential expression analysis")
-        deg_results = self.run_differential_expression(annotated_adata)
+        deg_results = self.run_differential_expression(adata)
         self.tracker.store('differential_expression', deg_results)
         
         # Run GSEA analysis
         self.logger.info("Step 6c: Gene Set Enrichment Analysis")
-        gsea_results = self.run_python_gsea(annotated_adata)
+        gsea_results = self.run_python_gsea(adata)
         self.tracker.store('gsea_results', gsea_results)
         
         # Run drug target identification
@@ -320,14 +364,14 @@ class LeukoMapAnalysis:
         try:
             from scripts.visualization_pipeline import LeukoMapVisualizer
             visualizer = LeukoMapVisualizer(str(self.config.output_dir / 'figures'))
-            figures = visualizer.create_comprehensive_report(annotated_adata, 'leukomap')
+            figures = visualizer.create_comprehensive_report(adata, 'leukomap')
             self.tracker.store('visualization_figures', figures)
         except Exception as e:
             self.logger.warning(f"Visualization failed: {e}")
         
         # Step 8: Export results
         self.logger.info("Step 8: Exporting results")
-        export_paths = self.export_results(annotated_adata, deg_results, gsea_results, drug_targets)
+        export_paths = self.export_results(adata, deg_results, gsea_results, drug_targets)
         self.tracker.store('export_paths', export_paths)
         
         # Generate analysis report
@@ -337,7 +381,7 @@ class LeukoMapAnalysis:
         self.logger.info("Full analysis complete")
         
         return {
-            'annotated_data': annotated_adata,
+            'annotated_data': adata,
             'druggable_targets': drug_targets,
             'differential_expression': deg_results,
             'analysis_report': report_path,

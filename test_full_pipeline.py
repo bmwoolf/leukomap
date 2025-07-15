@@ -1,149 +1,144 @@
 #!/usr/bin/env python3
 """
-Test script for the full LeukoMap pipeline (Python-only).
+End-to-end test of the LeukoMap pipeline using real data.
+
+This script tests the complete pipeline from data loading through analysis
+using the real 10x Genomics data in the data/raw directory.
 """
 
-import sys
 import os
-import pandas as pd
-import numpy as np
-import scanpy as sc
+import sys
+import logging
 from pathlib import Path
+import tempfile
+import shutil
 
-# Add project root to path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Add the project root to the Python path
+project_root = Path(__file__).parent
+sys.path.insert(0, str(project_root))
 
-def create_test_data():
-    """Create a small test dataset."""
-    print("Creating test data...")
-    
-    # Create mock gene expression data
-    n_cells = 100
-    n_genes = 50
-    
-    # Create realistic gene names
-    gene_names = [f"Gene_{i:03d}" for i in range(n_genes)]
-    cell_names = [f"Cell_{i:03d}" for i in range(n_cells)]
-    
-    # Create expression matrix with some structure
-    np.random.seed(42)
-    # Use more realistic parameters for single-cell data
-    expr_matrix = np.random.negative_binomial(10, 0.1, (n_cells, n_genes))
-    # Add some zeros (sparsity)
-    mask = np.random.random((n_cells, n_genes)) < 0.7
-    expr_matrix[mask] = 0
-    
-    # Add some cell type structure
-    cell_types = ['B_cell', 'T_cell', 'Monocyte', 'Neutrophil']
-    sample_types = ['ETV6-RUNX1', 'PBMMC']
-    
-    # Create AnnData
-    adata = sc.AnnData(X=expr_matrix)
-    adata.var_names = gene_names
-    adata.obs_names = cell_names
-    
-    # Add metadata
-    adata.obs['sample_type'] = np.random.choice(sample_types, n_cells)
-    adata.obs['predicted_celltype'] = np.random.choice(cell_types, n_cells)
-    adata.obs['annotation_confidence'] = np.random.uniform(0.5, 0.9, n_cells)
-    
-    # Add some quality metrics
-    adata.obs['total_counts'] = expr_matrix.sum(axis=1)
-    adata.obs['n_genes_by_counts'] = (expr_matrix > 0).sum(axis=1)
-    
-    print(f"Created test data: {adata.n_obs} cells, {adata.n_vars} genes")
-    return adata
+from leukomap import analyze
+from leukomap.core import AnalysisConfig
+from leukomap.data_loading import DataLoader
 
-def test_pipeline():
-    """Test the full pipeline."""
-    print("Testing LeukoMap pipeline...")
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+def test_full_pipeline():
+    """Test the complete LeukoMap pipeline with real data."""
     
-    try:
-        from leukomap import analyze
-        from leukomap.core import LeukoMapAnalysis, AnalysisConfig
+    # Check if real data exists
+    data_path = Path("data")
+    if not data_path.exists():
+        logger.error("Data directory not found. Please ensure the data/raw directory contains 10x Genomics data.")
+        return False
+    
+    # Create a temporary directory for results
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
         
-        # Create test data
-        adata = create_test_data()
-        
-        # Create config
+        # Configure the pipeline for testing with real data
         config = AnalysisConfig(
-            output_dir=Path("test_results"),
-            n_latent=5,  # Smaller for testing
-            max_epochs=10,  # Fewer epochs for testing
-            batch_size=32,
-            min_genes=5,  # Lower threshold for testing
-            min_cells=2   # Lower threshold for testing
+            data_path=data_path,
+            output_dir=temp_path,
+            max_epochs=50,  # Reduced for testing
+            batch_size=128,
+            learning_rate=1e-3,
+            n_latent=10,
+            n_hidden=128,
+            n_layers=2,
+            dropout_rate=0.1,
+            n_neighbors=15,
+            resolution=0.5,
+            min_genes=200,
+            min_cells=3,
+            max_genes=2500,
+            annotation_methods=['celltypist'],
+            confidence_threshold=0.7
         )
         
-        # Create analysis object
-        analyzer = LeukoMapAnalysis(config)
+        logger.info("Starting full pipeline test with real data...")
+        logger.info(f"Data path: {data_path}")
+        logger.info(f"Output directory: {temp_path}")
         
-        # Run analysis (this will test the full pipeline)
-        print("Running full analysis pipeline...")
-        results = analyzer.run_full_analysis_with_data(adata)
-        
-        print("✅ Pipeline completed successfully!")
-        print(f"Results keys: {list(results.keys())}")
-        
-        # Check if we have the expected outputs
-        expected_keys = ['annotated_data', 'druggable_targets', 'differential_expression', 'analysis_report']
-        for key in expected_keys:
-            if key in results:
-                print(f"✅ {key}: Found")
-            else:
-                print(f"⚠️  {key}: Missing")
-        
-        return True
-        
-    except Exception as e:
-        print(f"❌ Pipeline test failed: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
-
-def test_individual_components():
-    """Test individual components."""
-    print("\nTesting individual components...")
-    
-    # Test auto cell type labeling
-    try:
-        from scripts.auto_celltype_labeling import AutoCellTypeLabeler
-        print("✅ Auto cell type labeling: OK")
-    except Exception as e:
-        print(f"❌ Auto cell type labeling: {e}")
-    
-    # Test visualization pipeline
-    try:
-        from scripts.visualization_pipeline import LeukoMapVisualizer
-        print("✅ Visualization pipeline: OK")
-    except Exception as e:
-        print(f"❌ Visualization pipeline: {e}")
-    
-    # Test advanced analysis
-    try:
-        from scripts.advanced_analysis import AdvancedLeukoMapAnalysis
-        print("✅ Advanced analysis: OK")
-    except Exception as e:
-        print(f"❌ Advanced analysis: {e}")
+        try:
+            # Load the real 10x data using DataLoader
+            loader = DataLoader(config)
+            adata = loader.process()
+            
+            # Run the complete analysis pipeline
+            results = analyze(adata, output_dir=temp_path)
+            
+            # Verify results
+            if results is None:
+                logger.error("Analysis returned None")
+                return False
+            
+            # Check that key outputs were generated
+            expected_files = [
+                "preprocessing_report.txt",
+                "cell_type_annotation_summary.md", 
+                "differential_expression_summary.md",
+                "analysis_report.txt"
+            ]
+            
+            for file_name in expected_files:
+                file_path = temp_path / "summaries" / file_name
+                if not file_path.exists():
+                    logger.warning(f"Expected output file not found: {file_path}")
+                else:
+                    logger.info(f"✓ Generated: {file_name}")
+            
+            # Check for key data files
+            expected_data_files = [
+                "adata_processed.h5ad",
+                "adata_integrated.h5ad",
+                "adata_annotated.h5ad"
+            ]
+            
+            for file_name in expected_data_files:
+                file_path = temp_path / "data" / file_name
+                if not file_path.exists():
+                    logger.warning(f"Expected data file not found: {file_path}")
+                else:
+                    logger.info(f"✓ Generated: {file_name}")
+            
+            # Check for visualizations
+            expected_viz_files = [
+                "umap_clusters.png",
+                "umap_celltype.png", 
+                "volcano_plots.png"
+            ]
+            
+            for file_name in expected_viz_files:
+                file_path = temp_path / "figures" / file_name
+                if not file_path.exists():
+                    logger.warning(f"Expected visualization not found: {file_path}")
+                else:
+                    logger.info(f"✓ Generated: {file_name}")
+            
+            logger.info("✓ Full pipeline test completed successfully!")
+            logger.info(f"Results saved to: {temp_path}")
+            
+            # Print summary statistics
+            if hasattr(results, 'adata') and results.adata is not None:
+                logger.info(f"Final dataset: {results.adata.n_obs} cells, {results.adata.n_vars} genes")
+                if 'leiden' in results.adata.obs.columns:
+                    n_clusters = results.adata.obs['leiden'].nunique()
+                    logger.info(f"Identified {n_clusters} clusters")
+                if 'cell_type' in results.adata.obs.columns:
+                    n_cell_types = results.adata.obs['cell_type'].nunique()
+                    logger.info(f"Annotated {n_cell_types} cell types")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Pipeline test failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
 
 if __name__ == "__main__":
-    print("="*60)
-    print("LEUKOMAP PIPELINE TEST (Python-only)")
-    print("="*60)
-    
-    # Test individual components first
-    test_individual_components()
-    
-    # Test full pipeline
-    print("\n" + "="*60)
-    print("FULL PIPELINE TEST")
-    print("="*60)
-    
-    success = test_pipeline()
-    
-    if success:
-        print("\n🎉 All tests passed! LeukoMap is ready to use.")
-    else:
-        print("\n❌ Some tests failed. Please check the errors above.")
-    
-    print("\nTest completed.") 
+    success = test_full_pipeline()
+    sys.exit(0 if success else 1) 
