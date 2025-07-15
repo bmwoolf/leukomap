@@ -1,0 +1,11 @@
+cell_id,predicted_celltype,confidence,method,model
+Cell_1,Neutrophil,0.17210192559747792,Mock_Annotation,Simulated_Distribution
+Cell_2,T_cell,0.17216970268019577,Mock_Annotation,Simulated_Distribution
+Cell_3,Neutrophil,0.1,Mock_Annotation,Simulated_Distribution
+Cell_4,Monocyte,0.1,Mock_Annotation,Simulated_Distribution
+Cell_5,T_cell,0.2213262799028181,Mock_Annotation,Simulated_Distribution
+Cell_6,Neutrophil,0.15480075953582464,Mock_Annotation,Simulated_Distribution
+Cell_7,Neutrophil,0.1,Mock_Annotation,Simulated_Distribution
+Cell_8,Monocyte,0.1,Mock_Annotation,Simulated_Distribution
+Cell_9,Monocyte,0.22866329055016313,Mock_Annotation,Simulated_Distribution
+Cell_10,Neutrophil,0.17658081019948285,Mock_Annotation,Simulated_Distribution
