@@ -61,7 +61,8 @@ class SCVITrainer(DataProcessor):
             dropout_rate=self.config.dropout_rate,
             batch_size=self.config.batch_size,
             max_epochs=self.config.max_epochs,
-            learning_rate=self.config.learning_rate
+            learning_rate=self.config.learning_rate,
+            gpu_id=getattr(self.config, 'gpu_id', 0)
         )
         
         self.logger.info("scVI training completed")
@@ -136,7 +137,8 @@ def train_scvi_model(
     dropout_rate: float = 0.1,
     batch_size: int = 128,
     max_epochs: int = 400,
-    learning_rate: float = 1e-3
+    learning_rate: float = 1e-3,
+    gpu_id: int = 0
 ) -> SCVI:
     """
     Train scVI model on AnnData.
@@ -156,6 +158,14 @@ def train_scvi_model(
     """
     logger.info(f"Training scVI model with {n_latent} latent dimensions")
     
+    # Set device - GPU only
+    import torch
+    if not torch.cuda.is_available():
+        raise RuntimeError("GPU is required but not available. Please ensure CUDA is installed and a GPU is available.")
+    
+    device = f"cuda:{gpu_id}"
+    logger.info(f"Using GPU: {device}")
+    
     # Create model
     model = SCVI(
         adata,
@@ -169,7 +179,9 @@ def train_scvi_model(
     model.train(
         batch_size=batch_size,
         max_epochs=max_epochs,
-        plan_kwargs={"lr": learning_rate}
+        plan_kwargs={"lr": learning_rate},
+        accelerator="gpu",
+        devices=[gpu_id]
     )
     
     logger.info("scVI model training completed")

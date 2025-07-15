@@ -55,7 +55,8 @@ def test_full_pipeline():
             min_cells=3,
             max_genes=2500,
             annotation_methods=['celltypist'],
-            confidence_threshold=0.7
+            confidence_threshold=0.7,
+            gpu_id=0  # Use first GPU
         )
         
         logger.info("Starting full pipeline test with real data...")

@@ -56,6 +56,7 @@ class AnalysisConfig:
     n_pcs: int = 50
     figure_dpi: int = 300
     figure_format: str = 'png'
+    gpu_id: int = 0  # GPU device ID
     
     def __post_init__(self):
         self.output_dir.mkdir(exist_ok=True)
