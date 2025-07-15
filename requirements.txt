@@ -37,4 +37,4 @@ mypy>=1.5.0
 huggingface-hub>=0.19.0
 
 # R integration (optional - for Azimuth and SingleR)
-rpy2>=3.5.0 
+# rpy2 removed - using Python-only approach 

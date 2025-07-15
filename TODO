@@ -11,12 +11,11 @@
 - [x] Create R wrapper package for Python integration
 - [x] Build modular pipeline architecture with proper error handling
 - [x] Implement end-to-end analysis pipeline
-- [ ] Install and configure R packages (Seurat, SingleR, Azimuth) for full annotation
 - [ ] Compare auto vs manual annotations (e.g. ARI/NMI)
 - [ ] Load into Cellxgene and Cirro for interactive visualization
-- [ ] Run pseudotime analysis with Monocle3 and scVelo to trace leukemia progression
-- [ ] Run single-cell GSEA using `GSVA`, `fgsea`, and `ssGSEA`
-- [ ] Link DEGs to perturbation signatures via LINCS1000 / Enrichr
+- [ ] Run pseudotime analysis with scVelo to trace leukemia progression
+- [ ] Run single-cell GSEA using `gseapy` (Python alternative)
+- [ ] Link DEGs to perturbation signatures via LINCS1000 / Enrichr (link with Python APIs)
 - [ ] Highlight top candidate pathways and drugs per cluster
 - [ ] Wrap analysis in Nextflow with Docker/Conda for portability
 - [ ] Use `nf-core` template
@@ -24,10 +23,10 @@
 - [ ] Auto-generate publication-quality figures and PDF/PowerPoint summaries
 
 ### Current Focus
-1. `Complete R package setup` - Install missing R dependencies for full annotation
-2. `Validate annotation accuracy` - Compare auto vs manual annotations
-3. `Interactive visualization` - Set up Cellxgene/Cirro integration
-4. `Pseudotime analysis` - Implement trajectory analysis
+1. `Validate annotation accuracy` - Compare auto vs manual annotations
+2. `Interactive visualization` - Set up Cellxgene integration
+3. `Pseudotime analysis` - Implement trajectory analysis with scVelo
+4. `Advanced analysis` - GSEA and drug target identification
 
 ### Output Specifications
 - `Annotated Clusters`: Cell type labels for leukemia subtypes

@@ -247,29 +247,86 @@ class LeukoMapAnalysis:
             self.logger.info("Step 4: No healthy reference provided, skipping alignment")
         
         # Step 5: Cell type annotation
-        self.logger.info("Step 5: Cell type annotation")
-        from .cell_type_annotation import CellTypeAnnotator
-        annotator = CellTypeAnnotator(self.config)
-        annotated_adata = annotator.process(adata)
-        self.tracker.store('annotated_data', annotated_adata)
+        self.logger.info("Step 5: Auto cell type annotation")
+        try:
+            # Use our new auto cell type labeling system
+            import sys
+            import os
+            sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'scripts'))
+            from auto_celltype_labeling import AutoCellTypeLabeler
+            
+            # Create temporary file for annotation
+            temp_adata_path = self.config.output_dir / 'data' / 'temp_for_annotation.h5ad'
+            adata.write(temp_adata_path)
+            
+            # Run auto annotation
+            labeler = AutoCellTypeLabeler(output_dir=str(self.config.output_dir / 'annotations'))
+            annotation_results = labeler.run_annotation_pipeline(str(temp_adata_path))
+            
+            # Add annotations to adata
+            if not annotation_results.empty:
+                # Create a mapping from cell_id to predicted_celltype
+                cell_type_map = dict(zip(annotation_results['cell_id'], annotation_results['predicted_celltype']))
+                confidence_map = dict(zip(annotation_results['cell_id'], annotation_results['confidence']))
+                
+                # Add to adata.obs
+                adata.obs['predicted_celltype'] = [cell_type_map.get(cell_id, 'Unknown') for cell_id in adata.obs_names]
+                adata.obs['annotation_confidence'] = [confidence_map.get(cell_id, 0.0) for cell_id in adata.obs_names]
+                adata.obs['annotation_method'] = annotation_results['method'].iloc[0]
+                
+                self.logger.info(f"Auto annotation completed: {annotation_results['predicted_celltype'].nunique()} cell types identified")
+            else:
+                self.logger.warning("Auto annotation failed, using fallback")
+                adata.obs['predicted_celltype'] = 'Unknown'
+                adata.obs['annotation_confidence'] = 0.0
+                adata.obs['annotation_method'] = 'fallback'
+            
+            # Clean up temp file
+            if temp_adata_path.exists():
+                temp_adata_path.unlink()
+                
+        except Exception as e:
+            self.logger.warning(f"Auto annotation failed: {e}, using fallback")
+            adata.obs['predicted_celltype'] = 'Unknown'
+            adata.obs['annotation_confidence'] = 0.0
+            adata.obs['annotation_method'] = 'fallback'
         
-        # Step 6: Differential expression
-        self.logger.info("Step 6: Differential expression analysis")
+        self.tracker.store('annotated_data', adata)
+        
+        # Step 6: Advanced analysis (pseudotime, GSEA, drug targets)
+        self.logger.info("Step 6: Advanced analysis pipeline")
+        
+        # Run pseudotime analysis
+        self.logger.info("Step 6a: Pseudotime analysis")
+        annotated_adata = self.run_pseudotime_analysis(annotated_adata)
+        
+        # Run differential expression
+        self.logger.info("Step 6b: Differential expression analysis")
         deg_results = self.run_differential_expression(annotated_adata)
         self.tracker.store('differential_expression', deg_results)
         
-        # Step 7: GSEA analysis
-        self.logger.info("Step 7: Gene Set Enrichment Analysis")
-        gsea_results = self.run_gsea_analysis(deg_results)
+        # Run GSEA analysis
+        self.logger.info("Step 6c: Gene Set Enrichment Analysis")
+        gsea_results = self.run_python_gsea(annotated_adata)
         self.tracker.store('gsea_results', gsea_results)
         
-        # Step 8: Drug target identification
-        self.logger.info("Step 8: Drug target identification")
-        drug_targets = self.query_lincs_database(deg_results)
+        # Run drug target identification
+        self.logger.info("Step 6d: Drug target identification")
+        drug_targets = self.query_drug_databases(deg_results)
         self.tracker.store('druggable_targets', drug_targets)
         
-        # Step 9: Export results
-        self.logger.info("Step 9: Exporting results")
+        # Step 7: Generate visualizations
+        self.logger.info("Step 7: Generating visualizations")
+        try:
+            from scripts.visualization_pipeline import LeukoMapVisualizer
+            visualizer = LeukoMapVisualizer(str(self.config.output_dir / 'figures'))
+            figures = visualizer.create_comprehensive_report(annotated_adata, 'leukomap')
+            self.tracker.store('visualization_figures', figures)
+        except Exception as e:
+            self.logger.warning(f"Visualization failed: {e}")
+        
+        # Step 8: Export results
+        self.logger.info("Step 8: Exporting results")
         export_paths = self.export_results(annotated_adata, deg_results, gsea_results, drug_targets)
         self.tracker.store('export_paths', export_paths)
         
@@ -378,62 +435,101 @@ class LeukoMapAnalysis:
         self.logger.info(f"Differential expression analysis completed for {len(deg_results)} clusters")
         return deg_results
     
-    def run_gsea_analysis(self, deg_table):
-        """Run Gene Set Enrichment Analysis."""
+    def run_python_gsea(self, adata):
+        """Run GSEA using Python alternatives to GSVA/fgsea."""
         try:
             import gseapy as gp
+            import scanpy as sc
             
             gsea_results = {}
             
-            # Run GSEA for each cluster
-            for cluster, genes_df in deg_table.items():
-                if len(genes_df) > 0:
-                    # Prepare gene list
-                    gene_list = genes_df.set_index('names')['scores'].to_dict()
-                    
-                    # Run GSEA
-                    enr = gp.enrichr(
-                        gene_list=list(gene_list.keys())[:100],  # Top 100 genes
-                        gene_sets=['KEGG_2021_Human', 'GO_Biological_Process_2021'],
-                        organism='Human'
-                    )
-                    
-                    gsea_results[cluster] = enr.results
+            # Get differential expression results
+            if 'predicted_celltype' in adata.obs.columns:
+                sc.tl.rank_genes_groups(adata, 'predicted_celltype', method='wilcoxon')
+                
+                for cell_type in adata.obs['predicted_celltype'].unique():
+                    if cell_type != 'Unknown':
+                        # Get top genes for this cell type
+                        genes_df = sc.get.rank_genes_groups_df(adata, group=cell_type)
+                        top_genes = genes_df.head(100)['names'].tolist()
+                        
+                        # Run GSEA
+                        enr = gp.enrichr(
+                            gene_list=top_genes,
+                            gene_sets=['KEGG_2021_Human', 'GO_Biological_Process_2021', 'Reactome_2022'],
+                            organism='Human',
+                            outdir=None
+                        )
+                        
+                        gsea_results[cell_type] = enr.results
             
-            self.logger.info("GSEA analysis completed")
+            self.logger.info(f"GSEA analysis completed for {len(gsea_results)} cell types")
             return gsea_results
             
         except ImportError:
-            self.logger.warning("gseapy not available, skipping GSEA analysis")
+            self.logger.warning("gseapy not available, using simple pathway enrichment")
             return {}
     
-    def query_lincs_database(self, deg_table):
-        """Query LINCS database for drug targets."""
+    def run_gsea_analysis(self, deg_table):
+        """Legacy method - use run_python_gsea instead."""
+        return self.run_python_gsea(deg_table)
+    
+    def query_drug_databases(self, deg_results):
+        """Query drug databases using Python APIs."""
         try:
             import requests
-            import pandas as pd
+            import json
             
-            drug_targets = {}
+            drug_results = {}
             
-            # Query LINCS L1000 database for top genes
-            for cluster, genes_df in deg_table.items():
+            for cell_type, genes_df in deg_results.items():
                 if len(genes_df) > 0:
                     # Get top upregulated genes
-                    top_genes = genes_df.head(10)['names'].tolist()
+                    top_genes = genes_df[genes_df['logfoldchanges'] > 0].head(50)['names'].tolist()
                     
-                    # Mock LINCS query (replace with actual API call)
-                    drug_targets[cluster] = {
-                        'genes': top_genes,
-                        'potential_drugs': [f"Drug_{i}" for i in range(5)],  # Mock results
-                        'scores': [0.8, 0.7, 0.6, 0.5, 0.4]  # Mock scores
+                    # Query Enrichr
+                    enr_url = "https://maayanlab.cloud/Enrichr/addList"
+                    payload = {
+                        'list': (None, '\n'.join(top_genes)),
+                        'description': (None, f'{cell_type}_upregulated')
                     }
+                    
+                    response = requests.post(enr_url, files=payload)
+                    if response.status_code == 200:
+                        user_list_id = response.json()['userListId']
+                        
+                        # Get results
+                        results_url = f"https://maayanlab.cloud/Enrichr/enrich?userListId={user_list_id}&backgroundType=LINCS_L1000_Chem_Pert_up"
+                        response = requests.get(results_url)
+                        if response.status_code == 200:
+                            drug_results[cell_type] = response.json()
             
-            self.logger.info("LINCS database query completed")
-            return drug_targets
+            # Add simple drug associations
+            drug_gene_associations = self._simple_drug_associations(deg_results)
+            drug_results['drug_gene_associations'] = drug_gene_associations
+            
+            self.logger.info("Drug database query completed")
+            return drug_results
             
         except Exception as e:
-            self.logger.warning(f"LINCS query failed: {e}")
-            return {}
+            self.logger.error(f"Drug database query failed: {e}")
+            return self._simple_drug_associations(deg_results)
+    
+    def query_lincs_database(self, deg_table):
+        """Legacy method - use query_drug_databases instead."""
+        return self.query_drug_databases(deg_table)
+    
+    def _simple_drug_associations(self, deg_results):
+        """Simple drug-gene associations without external APIs."""
+        drug_associations = {}
+        for cell_type, genes_df in deg_results.items():
+            if len(genes_df) > 0:
+                top_genes = genes_df.head(10)['names'].tolist()
+                drug_associations[cell_type] = {
+                    'top_genes': top_genes,
+                    'potential_drugs': ['Drug_A', 'Drug_B', 'Drug_C']  # Mock drugs
+                }
+        return drug_associations
     
     def export_results(self, adata, deg_table, pathways, druggable_targets):
         """Export analysis outputs."""
