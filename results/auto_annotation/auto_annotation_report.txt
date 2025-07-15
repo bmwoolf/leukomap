@@ -1,0 +1,36 @@
+Auto Cell Type Annotation Report
+==================================================
+
+Dataset: 39211 cells, 23198 genes
+
+Annotation Methods:
+  - CELLTYPIST: 7 cell types
+  - AZIMUTH: 1 cell types
+  - SINGLER: 1 cell types
+
+CELLTYPIST_CELL_TYPE Distribution:
+  - Neutrophil: 6,633 cells
+  - NK_cell: 6,583 cells
+  - Monocyte: 6,565 cells
+  - T_cell: 6,477 cells
+  - B_cell: 6,467 cells
+  - Erythroblast: 5,332 cells
+  - Platelet: 1,154 cells
+
+AZIMUTH_CELL_TYPE Distribution:
+  - Unknown: 39,211 cells
+
+SINGLER_CELL_TYPE Distribution:
+  - Unknown: 39,211 cells
+
+Method Comparison:
+  celltypist_cell_type vs azimuth_cell_type:
+    ARI: 0.000
+    NMI: 0.000
+  celltypist_cell_type vs singler_cell_type:
+    ARI: 0.000
+    NMI: 0.000
+  azimuth_cell_type vs singler_cell_type:
+    ARI: 1.000
+    NMI: 1.000
+

@@ -1,5 +1,5 @@
 """
-LeukoMap - Simplified single-cell RNA-seq analysis for leukemia research.
+LeukoMap - Single-cell RNA-seq analysis for leukemia research.
 
 A modular pipeline for analyzing single-cell RNA-seq data from leukemia samples,
 including data loading, preprocessing, cell type annotation, and analysis.
@@ -15,10 +15,9 @@ from .core import (
     AnalysisStage
 )
 
-from .data import (
+from .data_loading import (
     DataLoader,
-    DataValidator,
-    DataManager
+    load_data
 )
 
 from .preprocessing import (
@@ -31,63 +30,62 @@ from .cell_type_annotation import (
     annotate_cell_types_simple
 )
 
-# Legacy imports for backward compatibility
-from .data_loading import load_data
-from .scvi_training import train_models
+from .scvi_training import (
+    SCVITrainer,
+    train_models
+)
 
 __version__ = "2.0.0"
 __author__ = "LeukoMap Team"
 
-# Main analysis function
-def run_leukomap_analysis(data_path: str, output_dir: str = "results", **kwargs):
+def analyze(scRNA_seq_data, healthy_reference=None, output_dir="results", **kwargs):
     """
-    Run complete LeukoMap analysis pipeline.
+    Main analysis function for LeukoMap.
     
     Args:
-        data_path: Path to data directory
+        scRNA_seq_data: Path to scRNA-seq data or AnnData object
+        healthy_reference: Path to healthy reference data (optional)
         output_dir: Output directory for results
         **kwargs: Additional configuration parameters
         
     Returns:
-        Analysis results
+        Dict containing annotated_clusters and druggable_targets
     """
     from pathlib import Path
+    import scanpy as sc
+    import anndata as ad
     
+    # Create configuration
     config = AnalysisConfig(
-        data_path=Path(data_path),
         output_dir=Path(output_dir),
         **kwargs
     )
     
+    # Load data if path provided
+    if isinstance(scRNA_seq_data, (str, Path)):
+        if Path(scRNA_seq_data).exists():
+            adata = sc.read_h5ad(scRNA_seq_data)
+        else:
+            raise FileNotFoundError(f"Data file not found: {scRNA_seq_data}")
+    elif isinstance(scRNA_seq_data, ad.AnnData):
+        adata = scRNA_seq_data
+    else:
+        raise ValueError("scRNA_seq_data must be a file path or AnnData object")
+    
+    # Initialize analysis
     analysis = LeukoMapAnalysis(config)
-    return analysis.run_full_analysis()
+    
+    # Run complete pipeline
+    results = analysis.run_full_analysis_with_data(adata, healthy_reference)
+    
+    return {
+        'annotated_clusters': results.get('annotated_data'),
+        'druggable_targets': results.get('druggable_targets'),
+        'differential_expression': results.get('differential_expression'),
+        'analysis_report': results.get('analysis_report')
+    }
 
-# Convenience functions
-def load_and_preprocess(data_path: str, output_dir: str = "results"):
-    """Load and preprocess data."""
-    from pathlib import Path
-    
-    config = AnalysisConfig(data_path=Path(data_path), output_dir=Path(output_dir))
-    
-    # Load data
-    loader = DataLoader(config)
-    adata = loader.process()
-    
-    # Preprocess data
-    preprocessor = PreprocessingPipeline(config)
-    adata = preprocessor.process(adata)
-    
-    return adata
-
-def annotate_cells(adata, output_dir: str = "results"):
-    """Annotate cell types."""
-    from pathlib import Path
-    
-    config = AnalysisConfig(output_dir=Path(output_dir))
-    annotator = CellTypeAnnotator(config)
-    return annotator.process(adata)
-
-# Export main classes
+# Export main classes and functions
 __all__ = [
     # Core classes
     'AnalysisConfig',
@@ -100,8 +98,7 @@ __all__ = [
     
     # Data classes
     'DataLoader',
-    'DataValidator', 
-    'DataManager',
+    'load_data',
     
     # Preprocessing classes
     'PreprocessingPipeline',
@@ -111,12 +108,10 @@ __all__ = [
     'CellTypeAnnotator',
     'annotate_cell_types_simple',
     
-    # Legacy functions
-    'load_data',
+    # Training classes
+    'SCVITrainer',
     'train_models',
     
-    # Main functions
-    'run_leukomap_analysis',
-    'load_and_preprocess',
-    'annotate_cells'
+    # Main function
+    'analyze'
 ] 
