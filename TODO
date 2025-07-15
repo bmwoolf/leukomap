@@ -5,8 +5,8 @@
 - [x] Visualize embeddings with UMAP
 - [x] Integrate a healthy bone marrow reference (Human Cell Atlas) to detect abnormal clusters
 - [x] Perform differential expression between clusters
-- [] Run Azimuth (Seurat), CellTypist, and SingleR (R) for auto cell type labeling
-- [] Compare auto vs manual annotations (e.g. ARI/NMI)
+- [ ] Run Azimuth (Seurat), CellTypist, and SingleR (R) for auto cell type labeling
+- [ ] Compare auto vs manual annotations (e.g. ARI/NMI)
 - [ ] Load into Cellxgene and Cirro for interactive visualization
 - [ ] Run pseudotime analysis with Monocle3 and scVelo to trace leukemia progression
 - [ ] Run single-cell GSEA using `GSVA`, `fgsea`, and `ssGSEA`
@@ -15,5 +15,8 @@
 - [ ] turn scripts into actual classes, something that can be integrated into someone else's pipeline
 - [ ] Wrap analysis in Nextflow with Docker/Conda for portability
 - [ ] Use `nf-core` template
-- [ ] Export results as CSV and JSON, ready for ML and ontology integration
+- [ ] output as CSV and JSON, ready for ML and ontology integration
+    Annotated Clusters: Cell type labels for leukemia subtypes
+    Druggable Targets: Genes linked to drug compounds
+    Differential Expression: Marker genes per cluster
 - [ ] Auto-generate publication-quality figures and PDF/PowerPoint summaries
