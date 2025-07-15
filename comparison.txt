@@ -1,0 +1,154 @@
+UConn/paper- manual pattern discovery
+
+RAW DATA INPUT
+├── SRA Accessions (PRJNA548203)
+├── 11 samples: 3 healthy (PBMMC_1,2,3) + 8 cancer (ETV6-RUNX1_1-4, HHD_1-2, PRE-T_1-2)
+└── FASTQ files (3 files per sample: cell barcodes, UMIs, cDNA reads)
+
+    ↓
+    
+🔧 DATA PROCESSING PIPELINE (HPC/SLURM)
+├── 01_download.sh
+│   ├── Input: metadata.csv (SRA IDs)
+│   ├── Function: fasterq-dump(sra_id, threads=6, split_files=True)
+│   ├── Output: 33 FASTQ files (11 samples × 3 files each)
+│   └── Resources: 6 cores, 8GB RAM per sample
+│
+├── 02_fastqc_raw.sh  
+│   ├── Input: FASTQ files
+│   ├── Function: fastqc(fastq_file, quality_metrics=True)
+│   ├── Output: HTML quality reports
+│   └── Resources: 6 cores, 8GB RAM per sample
+│
+├── 03_multiqc_raw.sh
+│   ├── Input: FastQC reports
+│   ├── Function: multiqc(aggregate_reports=True)
+│   ├── Output: Combined quality report
+│   └── Resources: 1 core, 8GB RAM
+│
+└── 04_star_ensembl.sh ⚡ (CPU KILLER)
+    ├── Input: FASTQ files + Human genome (GRCh38) + Cell barcode whitelist
+    ├── Function: STAR(genome_dir, read_files, solo_type="CB_UMI_Simple")
+    ├── Output: BAM files + Gene count matrices
+    └── Resources: 8 cores, 64GB RAM per sample (1-2 hours each)
+
+    ↓
+    
+DOWNSTREAM ANALYSIS (Jupyter Notebooks)
+├── 06_annotation.ipynb
+│   ├── Input: Processed count matrices
+│   ├── Functions:
+│   │   ├── sc.read_h5ad("07_analysis.h5ad")
+│   │   ├── sc.pp.normalize_total(adata, target_sum=10^4)
+│   │   ├── sc.pp.log1p(adata)
+│   │   ├── celltypist.annotate(adata, model="Immune_All_High.pkl")
+│   │   └── sc.pp.highly_variable_genes(adata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+│   ├── Output: AnnData object with cell type annotations
+│   └── Cell Types: B cells, T cells, Monocytes, B-cell lineage, Erythroid cells, etc.
+│
+├── 07_diff_exp.ipynb
+│   ├── Input: Annotated AnnData object
+│   ├── Functions:
+│   │   ├── aggregate_and_filter(adata, cell_identity="T_cells", min_cells=30)
+│   │   ├── edgeR::DGEList(counts=counts_matrix, group=conditions)
+│   │   ├── edgeR::estimateDisp(dge)
+│   │   ├── edgeR::exactTest(dge, pair=c("healthy", "cancer"))
+│   │   └── limma::topTable(fit, coef=2, n=Inf)
+│   ├── Output: Differential expression results
+│   └── Results: 5,584 DE genes (healthy vs cancer), 3,283 DE genes (cancer subtypes)
+│
+└── 08_r_plotting.ipynb
+    ├── Input: AnnData object
+    ├── Functions:
+    │   ├── sceasy::convertFormat(adata, from="anndata", to="seurat")
+    │   ├── Seurat::RunUMAP(data, dims=1:10)
+    │   └── Seurat::DimPlot(data, reduction="umap", group.by="sample")
+    ├── Output: UMAP visualizations
+    └── Plots: Cell type clusters, sample distribution, condition comparison
+
+    ↓
+    
+FINAL OUTPUTS
+├── Statistical Results:
+│   ├── 5,584 differentially expressed genes (healthy vs cancer)
+│   ├── 3,283 differentially expressed genes (cancer subtypes)
+│   ├── Top genes: MYO7B (-6.5 logFC), CASC15 (-5.2 logFC), TPO (+10.3 logFC)
+│   └── Cell type distributions across conditions
+│
+├── Visualizations:
+│   ├── UMAP plots showing cell type clusters
+│   ├── Sample distribution plots
+│   ├── Condition comparison plots
+│   └── Quality control metrics
+│
+└── Data Objects:
+    ├── 07_analysis.h5ad (processed AnnData object)
+    ├── Cell type annotations (CellTypist predictions)
+    ├── Differential expression tables
+    └── Processed count matrices
+
+
+
+
+
+Ours- using DL to discover patterns in input data
+
+Raw 10x Data (data/raw/*)
+    ↓
+load_data(data_path: str) → AnnData
+    ↓
+PreprocessingPipeline.process(adata: AnnData) → AnnData
+    ├── _filter_cells(min_genes: int, max_counts: int) → AnnData
+    ├── _filter_genes(min_cells: int) → AnnData  
+    ├── sc.pp.normalize_total(target_sum: int) → AnnData
+    ├── sc.pp.log1p() → AnnData
+    ├── data.layers['scvi_input'] = data.X.copy() → Store for scVI
+    ├── sc.pp.highly_variable_genes(n_top_genes: int) → AnnData
+    ├── data.raw = data.copy() → Store full dataset
+    ├── data = data[:, highly_variable_genes] → Subset
+    └── sc.pp.scale(max_value: int) → AnnData (for PCA/UMAP)
+    ↓
+Diagnostics Check → Validate data quality
+    ├── Check adata.X (scaled) for NaNs/Infs
+    └── Check adata.layers['scvi_input'] (non-negative) for scVI
+    ↓
+SCVITrainer.process(adata: AnnData) → SCVI Model
+    ├── setup_scvi_data(adata, batch_key: str, layer: 'scvi_input') → AnnData
+    └── train_scvi_model(
+            n_latent: int,
+            n_hidden: int, 
+            n_layers: int,
+            dropout_rate: float,
+            batch_size: int,
+            max_epochs: int,
+            learning_rate: float,
+            gpu_id: int
+        ) → SCVI Model
+    ↓
+generate_embeddings(model: SCVI, adata: AnnData) → AnnData
+    ├── model.get_latent_representation() → np.array
+    ├── adata.obsm['X_scVI'] = latent → Store embeddings
+    ├── sc.pp.neighbors(use_rep='X_scVI', n_neighbors: int) → AnnData
+    ├── sc.tl.umap() → AnnData
+    └── sc.tl.leiden(resolution: float) → AnnData
+    ↓
+AutoCellTypeLabeler.run_annotation_pipeline(adata_path: str) → DataFrame
+    ├── Load adata from temp file
+    ├── Try CellTypist models (Immune_All_Low.pkl, etc.)
+    ├── Fallback to mock annotations if all fail
+    └── Return cell type predictions
+    ↓
+Advanced Analysis Pipeline
+    ├── run_pseudotime_analysis(adata: AnnData) → AnnData
+    ├── run_differential_expression(adata: AnnData) → DataFrame
+    ├── run_python_gsea(adata: AnnData) → DataFrame
+    └── query_drug_databases(deg_results: DataFrame) → DataFrame
+    ↓
+Visualization Pipeline
+    ├── LeukoMapVisualizer.create_comprehensive_report() → Figures
+    └── Save plots to output_dir/figures/
+    ↓
+Export Results
+    ├── Save AnnData objects (.h5ad)
+    ├── Save analysis reports (.txt, .md)
+    └── Save visualizations (.png)
