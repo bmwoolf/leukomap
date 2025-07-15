@@ -91,7 +91,7 @@ FINAL OUTPUTS
 
 
 
-Ours- using DL to discover patterns in input data
+Deep Learning- auto pattern discovery
 
 Raw 10x Data (data/raw/*)
     ↓
